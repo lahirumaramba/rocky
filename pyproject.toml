@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "rocky"
+version = "0.1.0"
+description = "Rocky Sound Generator (Project Hail Mary style) and Astromech sound generator."
+authors = ["Lahiru Maramba <llahiru@gmail.com>"]
+readme = "README.md"
+packages = [
+    {from = "lab", include = "astromech_test"},
+    {include = "rocky.py"}
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^2.2.6"
+pygame = "^2.6.1"
+ttastromech = "^0.6.1"
+
+[tool.poetry.scripts]
+rocky = "rocky:main"
+r2d2 = "astromech_test.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
