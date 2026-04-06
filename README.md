@@ -1,6 +1,6 @@
-# 🎸 Your Own Personal Eridanian Buddy
+# 🎸 Rocky: Your Own Personal Eridanian Buddy
 
-My own Eridanian friend inspired by Andy Weir's *Project Hail Mary*. He communicates natively in musical chords, which humans perceive as tones similar to a pipe organ or multiple flutes. 
+Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. He communicates natively in musical chords, which humans perceive as tones similar to a pipe organ or multiple flutes. 
 
 This project implements a **Dual-Device "Voice Box & Brain" Architecture** to bring Rocky to life on a Raspberry Pi Zero 2W with near-instant responsiveness.
 
