@@ -1,188 +1,417 @@
-import numpy as np
-import pygame
+import os
+import re
+import sys
 import time
-import hashlib
+import threading
+import subprocess
+import base64
+from PIL import Image, ImageDraw, ImageFont
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
 
-# Audio Settings
-SAMPLE_RATE = 44100
-pygame.mixer.init(frequency=SAMPLE_RATE, size=-16, channels=2)
+# Load environment variables
+load_dotenv()
 
-# Global Sound Cache: {(frequencies_tuple, duration, volume): pygame.Sound}
-SOUND_CACHE = {}
+# Local Imports
+sys.path.append(os.path.abspath("./Driver"))
+from WhisPlay import WhisPlayBoard
+from synthesizer.rocky import speak_rocky, pre_warm_cache
 
-def generate_chord_sound(frequencies, duration=0.3, volume=0.5):
-    """Generates a polyphonic Eridian chord and returns a pygame.Sound object."""
-    # Check cache first
-    cache_key = (tuple(sorted(frequencies)), duration, volume)
-    if cache_key in SOUND_CACHE:
-        return SOUND_CACHE[cache_key]
+# ==================== Configuration ====================
+API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL_ID = "gemini-2.5-flash-lite"  # Latest and fastest
+TEMP_AUDIO_PATH = "/tmp/rocky_input.wav"
+FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
-    t = np.linspace(0, duration, int(SAMPLE_RATE * duration), False)
-    wave = np.zeros_like(t)
+# Local LLM config
+USE_LOCAL_LLM = os.getenv("USE_LOCAL_LLM", "False").lower() in ["true", "1", "yes"]
+LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://localhost:1234/v1")
+
+# UI Config
+SHOW_BOOT_SCREEN = os.getenv("SHOW_BOOT_SCREEN", "True").lower() in ["true", "1", "yes"]
+
+# Load the system prompt
+try:
+    with open("system_prompt.txt", "r") as f:
+        SYSTEM_PROMPT = f.read().strip()
+except Exception:
+    SYSTEM_PROMPT = "You are Rocky from Project Hail Mary. Be brief, inquisitive, and friendly. Answer the user."
+
+# Initialize Client
+if USE_LOCAL_LLM:
+    print("\n--- Native Gemma 4 Server Backend ---")
+    print(f"Routing to: {LM_STUDIO_URL.replace('1234/v1', '8000/api/rocky_chat')}")
+    print("-------------------------------------\n")
+else:
+    if not API_KEY:
+        print("\nWARNING: GEMINI_API_KEY not found in environment!")
+    client = genai.Client(api_key=API_KEY)
+    try:
+        print("\n--- Available Gemini Models ---")
+        for m in client.models.list():
+            name = getattr(m, 'name', '')
+            if 'gemini' in name.lower():
+                print(f" - {name.replace('models/', '')}")
+        print("-------------------------------\n")
+    except Exception as e:
+        print(f"Could not list models: {e}")
+
+# ==================== Helper Functions ====================
+ICON_IMAGE = None
+
+def get_corner_icon():
+    global ICON_IMAGE
+    if ICON_IMAGE is None:
+        try:
+            image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rocky_wave.png")
+            if os.path.exists(image_path):
+                img = Image.open(image_path).convert("RGBA")
+                img.thumbnail((75, 75))  # Keep it relatively small for the corner
+                ICON_IMAGE = img
+        except Exception:
+            pass
+    return ICON_IMAGE
+
+def make_text_image(text, width=240, height=280, scroll_y=0, is_thinking=False):
+    """Generate RGB565 pixel data with wrapped text for display."""
+    img = Image.new('RGB', (width, height), (0, 0, 40))  # Dark blue background
+    draw = ImageDraw.Draw(img)
     
-    # Calculate envelope once (Vectorized!)
-    envelope = np.sin(np.pi * np.linspace(0, 1, len(t))) 
-    
-    # Layer the frequencies
-    for f in frequencies:
-        wave += (1.0 / len(frequencies)) * np.sin(2 * np.pi * f * t)
-
-    # Apply envelope to the combined wave
-    wave *= envelope
-
-    # Convert to 16-bit PCM (Stereo)
-    audio_data = (wave * volume * 32767).astype(np.int16)
-    stereo_data = np.ascontiguousarray(np.column_stack((audio_data, audio_data)))
-    sound = pygame.sndarray.make_sound(stereo_data)
-    
-    # Store in cache
-    SOUND_CACHE[cache_key] = sound
-    return sound
-
-def play_chord(frequencies, duration=0.3, volume=0.5, wait=True):
-    """Plays a chord using the cached generator."""
-    sound = generate_chord_sound(frequencies, duration, volume)
-    sound.play()
-    
-    if wait:
-        # Wait for the sound to finish playing, plus a tiny gap between words
-        time.sleep(duration + 0.05)
-
-
-# The "Dictionary" - Mapping specific concepts to frequencies (Hz)
-ERIDIAN_LEXICON = {
-    # High/Bright (Happy/Excited)
-    "amaze": [659.25, 830.61, 987.77],   # E Major 
-    "happy": [783.99, 987.77, 1174.66],  # G Major (Higher)
-    "yes": [523.25, 659.25, 783.99],     # C Major (Solid/Agreement)
-    "fist": [523.25, 659.25, 783.99],    # Same as "yes"
-
-    # Low/Dark (Sad/Bad)
-    "bad": [220.00, 233.08, 277.18],     # Low, dark dissonance
-    "sad": [293.66, 349.23, 440.00],     # D Minor low 
-    "sleep": [261.63, 311.13, 392.00],   # C Minor low (relaxing)
-    
-    # Dissonant/Urgent
-    "danger": [698.46, 740.00, 783.99],  # Clashing high cluster
-    "no": [349.23, 370.00, 392.00],      # F, F#, G (Abrupt dismissal)
-    
-    # Unique Signatures
-    "question": [440.00, 466.16],        # Dissonant semitone (Inquiry indicator)
-    "grace": [493.88, 622.25, 739.99],   # B Minor (Unique name signature)
-    "friend": [440.00, 554.37, 659.25],  # A Major
-    "astrophage": [880.00, 932.33, 987.77], # High chromatic cluster
-    
-    # Names (Long, complex multi-chord melodic sequences!)
-    "rocky": [
-        [349.23, 440.00, 523.25], # F Major
-        [440.00, 554.37, 659.25], # A Major
-        [523.25, 659.25, 783.99], # C Major
-        [587.33, 739.99, 880.00], # D Major
-        [659.25, 830.61, 987.77], # E Major
-        [783.99, 987.77, 1174.66] # G Major
-    ],
-    "adrian": [
-        [293.66, 349.23, 440.00], # D Minor
-        [329.63, 392.00, 493.88], # E Minor
-        [392.00, 466.16, 587.33]  # G Minor
-    ]
-}
-
-
-def word_to_chord(word):
-    """Generates a consistent, unique chord for any unknown word using its hash."""
-    hash_val = int(hashlib.md5(word.encode('utf-8')).hexdigest(), 16)
-    f1 = 200 + (hash_val % 700)
-    f2 = 200 + ((hash_val >> 8) % 700)
-    f3 = 200 + ((hash_val >> 16) % 700)
-    return [f1, f2, f3]
-
-
-def pre_warm_cache():
-    """Pre-generates sounds for all fixed words in the lexicon."""
-    print("Pre-warming voice cache...")
-    start_time = time.time()
-    for word, frequencies in ERIDIAN_LEXICON.items():
-        if isinstance(frequencies[0], list):
-            for chord in frequencies:
-                generate_chord_sound(chord, duration=0.15, volume=0.5)
-        else:
-            generate_chord_sound(frequencies, duration=0.3, volume=0.5)
-            # Also pre-warm excited versions
-            generate_chord_sound(frequencies, duration=0.2, volume=0.8)
-    
-    # Pre-warm question indicator (special duration/volume)
-    generate_chord_sound(ERIDIAN_LEXICON["question"], duration=0.4, volume=0.7)
-    
-    end_time = time.time()
-    print(f"Cache warmed in {end_time - start_time:.4f}s ({len(SOUND_CACHE)} sounds cached)")
-
-
-def speak_rocky(text):
-    print(f"\nRocky says: \"{text}\"")
-    
-    # Tokenize the text, keeping punctuation conceptually separated
-    words = text.lower().replace(",", "").replace(".", "").split()
+    # Load Font
+    try:
+        font = ImageFont.truetype(FONT_PATH, 20)
+    except Exception:
+        font = ImageFont.load_default()
+        
+    # Text Wrapping Logic
+    margin = 10
+    max_width = width - (margin * 2)
+    words = text.split()
+    lines = []
+    current_line = []
     
     for word in words:
-        is_question = "?" in word
-        is_exclamation = "!" in word
+        current_line.append(word)
+        # Check current line width
+        line_str = " ".join(current_line)
+        bbox = draw.textbbox((0, 0), line_str, font=font)
+        if (bbox[2] - bbox[0]) > max_width:
+            current_line.pop()
+            lines.append(" ".join(current_line))
+            current_line = [word]
+    lines.append(" ".join(current_line))
+    
+    # Draw Lines
+    y = margin - int(scroll_y)
+    for line in lines:
+        if y > -30 and y < height:
+            draw.text((margin, y), line, fill=(200, 230, 255), font=font)
+        y += 25  # Line height
         
-        # Strip punctuation for dictionary lookup
-        clean_word = word.replace("?", "").replace("!", "")
+    # Overlay corner icon at bottom right
+    icon = get_corner_icon()
+    if icon:
+        ix, iy = icon.size
+        # The 3rd parameter `icon` acts as the transparency mask (RGBA)
+        img.paste(icon, (width - ix - 5, height - iy - 5), icon)
         
-        # 1. Determine the chord for this exact word
-        if clean_word in ERIDIAN_LEXICON:
-            chord = ERIDIAN_LEXICON[clean_word]
-        elif clean_word == "":
-            continue
-        else:
-            chord = word_to_chord(clean_word)
+        # Add thinking bubble if in 'thinking' state
+        if is_thinking:
+            bubble_w = 48
+            bubble_h = 26
+            bubble_x = width - ix - bubble_w + 10
+            bubble_y = height - iy - bubble_h - 10
             
-        # 2. Adjust delivery based on punctuation
-        duration = 0.3
-        volume = 0.5
+            # draw bubble background
+            draw.rounded_rectangle([bubble_x, bubble_y, bubble_x + bubble_w, bubble_y + bubble_h], 
+                                   radius=12, fill=(220, 220, 220))
+                                   
+            # Small tail dots pointing down towards Rocky's head
+            draw.ellipse([bubble_x + bubble_w - 8, bubble_y + bubble_h + 2, bubble_x + bubble_w - 3, bubble_y + bubble_h + 7], fill=(220,220,220))
+            draw.ellipse([bubble_x + bubble_w + 2, bubble_y + bubble_h + 10, bubble_x + bubble_w + 5, bubble_y + bubble_h + 13], fill=(220,220,220))
+            
+            # 3 Typing dots
+            dot_r = 3
+            dx = bubble_x + 10
+            cy = bubble_y + (bubble_h // 2) - dot_r
+            for _ in range(3):
+                draw.ellipse([dx, cy, dx + dot_r*2, cy + dot_r*2], fill=(100, 100, 100))
+                dx += 12
         
-        if is_exclamation or "amaze" in clean_word or "danger" in clean_word:
-            duration = 0.2  # Faster, more excited/urgent cadence
-            volume = 0.8
-        
-        # Check if this word is a multi-chord melodic sequence (like a long name)
-        if isinstance(chord[0], list):
-            for sequence_chord in chord:
-                play_chord(sequence_chord, duration=0.15, volume=volume)
-        else:
-            # Play a normal, single-chord word
-            play_chord(chord, duration=duration, volume=volume)
-        
-        # 3. If it's a question, Rocky always appends the "question" indicator 
-        if is_question:
-            time.sleep(0.05)
-            play_chord(ERIDIAN_LEXICON["question"], duration=0.4, volume=0.7)
+    # Convert to RGB565
+    pixel_data = []
+    for py in range(height):
+        for px in range(width):
+            r, g, b = img.getpixel((px, py))
+            rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+            pixel_data.extend([(rgb565 >> 8) & 0xFF, rgb565 & 0xFF])
+    return pixel_data
 
+def load_image_rgb565(filepath, screen_width=240, screen_height=280):
+    """Load image file as RGB565 pixel data (scale maintaining aspect ratio + center crop)"""
+    try:
+        img = Image.open(filepath).convert('RGB')
+        original_width, original_height = img.size
+        aspect_ratio = original_width / original_height
+        screen_aspect_ratio = screen_width / screen_height
+
+        if aspect_ratio > screen_aspect_ratio:
+            new_height = screen_height
+            new_width = int(new_height * aspect_ratio)
+            resized_img = img.resize((new_width, new_height))
+            offset_x = (new_width - screen_width) // 2
+            cropped_img = resized_img.crop(
+                (offset_x, 0, offset_x + screen_width, screen_height))
+        else:
+            new_width = screen_width
+            new_height = int(new_width / aspect_ratio)
+            resized_img = img.resize((new_width, new_height))
+            offset_y = (new_height - screen_height) // 2
+            cropped_img = resized_img.crop(
+                (0, offset_y, screen_width, offset_y + screen_height))
+
+        pixel_data = []
+        for py in range(screen_height):
+            for px in range(screen_width):
+                r, g, b = cropped_img.getpixel((px, py))
+                rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+                pixel_data.extend([(rgb565 >> 8) & 0xFF, rgb565 & 0xFF])
+        return pixel_data
+    except Exception as e:
+        print(f"Error loading image: {e}")
+        return None
+
+# ==================== Main Application ====================
+
+class RockyApp:
+    def __init__(self):
+        self.board = WhisPlayBoard()
+        self.board.set_backlight(60)
+        
+        # Audio status
+        self._record_proc = None
+        self._is_recording = False
+        
+        # Boot Screen Setup
+        if SHOW_BOOT_SCREEN:
+            boot_img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rocky_boot_screen.png")
+            if os.path.exists(boot_img_path):
+                print("LCD: Loading Boot Screen...")
+                img_data = load_image_rgb565(boot_img_path, self.board.LCD_WIDTH, self.board.LCD_HEIGHT)
+                if img_data:
+                    self.board.draw_image(0, 0, self.board.LCD_WIDTH, self.board.LCD_HEIGHT, img_data)
+        
+        # Pre-warm voice cache (Perfect loading screen background task!)
+        pre_warm_cache()
+        
+        if SHOW_BOOT_SCREEN:
+            time.sleep(1.5) # Force wait 1.5s so the boot screen is actually enjoyed!
+            
+        # Display Initial screen
+        self.show_message("ROCKY READY\nHold button to speak")
+        self.board.set_rgb(0, 0, 255)  # Blue ready LED
+
+    def show_message(self, text, is_thinking=False):
+        print(f"LCD: {text}")
+        data = make_text_image(text, self.board.LCD_WIDTH, self.board.LCD_HEIGHT, is_thinking=is_thinking)
+        self.board.draw_image(0, 0, self.board.LCD_WIDTH, self.board.LCD_HEIGHT, data)
+
+    def _get_alsa_device(self):
+        """Dynamically find the wm8960 sound card."""
+        try:
+            out = subprocess.check_output(['arecord', '-l'], text=True)
+            for line in out.splitlines():
+                if "wm8960" in line.lower() and "card" in line.lower():
+                    parts = line.split(":")
+                    if len(parts) > 0 and "card" in parts[0]:
+                        card_num = parts[0].replace("card", "").strip()
+                        return f"hw:{card_num},0"
+        except Exception:
+            pass
+        return "hw:0,0"  # Safest fallback based on user's arecord -l
+
+    def _start_recording(self):
+        """Invoke arecord directly to match WhisPlay hardware."""
+        print("🎙️ Recording started...")
+        self.board.set_rgb(255, 0, 0)  # Red recording LED
+        self.show_message("LISTENING...")
+        
+        alsa_device = self._get_alsa_device()
+        
+        # The hardware WM8960 is extremely strict. It requires 48000Hz to prevent clock 
+        # jitter distortion (PLL divider logic) and natively expects 2-channel capture.
+        self._record_proc = subprocess.Popen(
+            ['arecord', '-D', alsa_device, '-f', 'S16_LE', '-r', '48000', '-c', '2', '-t', 'wav', TEMP_AUDIO_PATH],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+
+    def _start_scrolling(self, text):
+        self._scroll_running = True
+        self._scroll_thread = threading.Thread(target=self._scroll_worker, args=(text,))
+        self._scroll_thread.start()
+
+    def _stop_scrolling(self):
+        self._scroll_running = False
+        if hasattr(self, '_scroll_thread') and self._scroll_thread:
+            self._scroll_thread.join()
+
+    def _scroll_worker(self, text):
+        # Calculate max lines to determine max scroll length
+        try: font = ImageFont.truetype(FONT_PATH, 20)
+        except Exception: font = ImageFont.load_default()
+        
+        margin = 10
+        img_dummy = Image.new('RGB', (1, 1))
+        draw_dummy = ImageDraw.Draw(img_dummy)
+        lines = []
+        current_line = []
+        for word in text.split():
+            current_line.append(word)
+            bbox = draw_dummy.textbbox((0, 0), " ".join(current_line), font=font)
+            if (bbox[2] - bbox[0]) > (self.board.LCD_WIDTH - margin * 2):
+                current_line.pop()
+                lines.append(" ".join(current_line))
+                current_line = [word]
+        lines.append(" ".join(current_line))
+        
+        max_height = len(lines) * 25
+        max_scroll = max(0, max_height - (self.board.LCD_HEIGHT - 60)) # leave margin at bottom
+        
+        scroll_y = 0
+        scroll_speed = 1.5 # smooth pixels per frame
+        
+        # Display the text initially and hold string for 1.5s so user can read the start!
+        self.show_message(text)
+        start_wait = time.time()
+        while self._scroll_running and time.time() - start_wait < 1.5:
+            time.sleep(0.05)
+            
+        # Begin auto-scroll loop
+        while self._scroll_running and scroll_y < max_scroll:
+            scroll_y += scroll_speed
+            data = make_text_image(text, self.board.LCD_WIDTH, self.board.LCD_HEIGHT, scroll_y)
+            self.board.draw_image(0, 0, self.board.LCD_WIDTH, self.board.LCD_HEIGHT, data)
+            time.sleep(0.05)
+
+    def _stop_recording(self):
+        """Stop arecord process."""
+        print("⏹️ Recording stopped.")
+        if self._record_proc:
+            self._record_proc.terminate()
+            stdout, stderr = self._record_proc.communicate()
+            if not os.path.exists(TEMP_AUDIO_PATH):
+                print(f"\n[ALSA Error] arecord failed:\n{stderr.decode('utf-8', errors='ignore')}")
+            self._record_proc = None
+        
+        self.board.set_rgb(255, 255, 0)  # Yellow thinking LED
+        self.show_message("THINKING...", is_thinking=True)
+
+        if not os.path.exists(TEMP_AUDIO_PATH):
+            err_msg = "Error: arecord failed to record audio."
+            self.show_message(err_msg)
+            print(err_msg)
+            speak_rocky(err_msg)
+            # Return to idle (leaving the error text on screen)
+            self.board.set_rgb(0, 0, 255)
+            return
+        
+        # Process with LLM
+        print(f"🚀 Sending audio payload to {'Local Proxy' if USE_LOCAL_LLM else 'Gemini Cloud'}...")
+        start_time = time.time()
+        response_text = self.query_llm(TEMP_AUDIO_PATH)
+        duration = time.time() - start_time
+        
+        provider = "Local STT/LM Studio Proxy" if USE_LOCAL_LLM else "Cloud Gemini API"
+        print(f"⏱️ [LLM Benchmark] {provider} returned text in {duration:.2f} seconds!")
+        
+        if response_text:
+            self.board.set_rgb(0, 255, 0)  # Green speaking LED
+            
+            # Start background scrolling while Rocky speaks
+            self._start_scrolling(response_text)
+            
+            # This blocks until Rocky finishes speaking
+            speak_rocky(response_text)
+            
+            # Gracefully end the scrolling thread
+            self._stop_scrolling()
+            
+        # Return to idle (leaving the text on screen so user can read it)
+        self.board.set_rgb(0, 0, 255)
+
+    def query_llm(self, audio_filepath):
+        """Send audio to Gemini OR a local LM Studio server for transcription and response."""
+        try:
+            with open(audio_filepath, 'rb') as f:
+                audio_bytes = f.read()
+
+            if USE_LOCAL_LLM:
+                import urllib.request
+                import json
+                
+                base64_audio = base64.b64encode(audio_bytes).decode('utf-8')
+                native_url = LM_STUDIO_URL.replace("1234/v1", "8000/api/rocky_chat")
+                
+                req_data = json.dumps({
+                    "audio_base64": base64_audio,
+                    "system_prompt": SYSTEM_PROMPT + "\nIMPORTANT: Do NOT include any audio timestamps in your text output!"
+                }).encode('utf-8')
+                
+                req = urllib.request.Request(native_url, data=req_data, headers={'Content-Type': 'application/json'})
+                with urllib.request.urlopen(req, timeout=120) as response:
+                    resp_json = json.loads(response.read().decode())
+                    clean_text = resp_json.get("text", "")
+            else:
+                response = client.models.generate_content(
+                    model=MODEL_ID,
+                    contents=[
+                        types.Part.from_bytes(
+                            data=audio_bytes,
+                            mime_type='audio/wav',
+                        )
+                    ],
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT + "\nIMPORTANT: Do NOT include any audio timestamps in your text output!"
+                    )
+                )
+                clean_text = response.text
+                
+            # Remove Gemini's automatic audio timestamps (e.g. "00:03 ", "[00:00]", ":00:")
+            clean_text = re.sub(r'(?m)^[^\w\s]*\d{0,2}:\d{2}[^\w\s]*\s*', '', clean_text)
+            
+            # Replace all question marks with Rocky's signature verbal tick
+            clean_text = re.sub(r'\s*\?', ' question?', clean_text)
+            
+            return clean_text.strip()
+        except Exception as e:
+            print(f"LLM Error: {e}")
+            return f"Error: {str(e)}"
+
+    def run(self):
+        print("Starting Rocky App Loop...")
+        try:
+            while True:
+                # Polling for button hold
+                # This matches the 'hold to record' requirement
+                if self.board.button_pressed():
+                    if not self._is_recording:
+                        self._is_recording = True
+                        self._start_recording()
+                else:
+                    if self._is_recording:
+                        self._is_recording = False
+                        self._stop_recording()
+                
+                time.sleep(0.05)
+        except KeyboardInterrupt:
+            print("Exiting...")
+        finally:
+            self.board.cleanup()
 
 def main():
-    # Give the audio system a split-second to wake up
-    time.sleep(0.5)
-    
-    # Optimize: Pre-generate lexicon sounds
-    pre_warm_cache()
-    
-    phrases = [
-        "Amaze amaze amaze!!",
-        "Bad bad bad!!",
-        "Friend Grace, sleep question?",
-        "Astrophage bad! Danger danger!",
-        "Yes, happy! Fist-bump!",
-        "I am Rocky.",
-        "My mate is Adrian.",
-        "Sad... no sleep. Bad astrophage."
-    ]
-    
-    for phrase in phrases:
-        speak_rocky(phrase)
-        time.sleep(0.8) # Pause between phrases
-
+    app = RockyApp()
+    app.run()
 
 if __name__ == "__main__":
     main()

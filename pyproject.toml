@@ -1,24 +1,51 @@
-[tool.poetry]
+[project]
 name = "rocky"
 version = "0.1.0"
 description = "Rocky Sound Generator (Project Hail Mary style) and Astromech sound generator."
-authors = ["Lahiru Maramba <llahiru@gmail.com>"]
 readme = "README.md"
-packages = [
-    {from = "lab", include = "astromech_test"},
-    {include = "rocky.py"}
+requires-python = ">=3.10"
+authors = [
+    { name = "Lahiru Maramba", email = "llahiru@gmail.com" }
+]
+dependencies = [
+    "numpy>=2.2.6",
+    "pygame>=2.6.1",
+    "ttastromech>=0.6.1",
+    "google-genai>=0.3.0",
+    "Pillow>=10.0.0",
+    "python-dotenv>=1.0.0",
+    "openai>=1.0.0",
+    "spidev ; sys_platform == 'linux'",
+    "gpiod ; sys_platform == 'linux'",
+    "rpi-lgpio ; sys_platform == 'linux'",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-numpy = "^2.2.6"
-pygame = "^2.6.1"
-ttastromech = "^0.6.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 rocky = "rocky:main"
 r2d2 = "astromech_test.main:main"
+rocky-server = "lab.gemma_server:main"
+stt-server = "stt_server:main"
+
+[project.optional-dependencies]
+mac-server = [
+    "librosa",
+    "torch",
+    "torchvision",
+    "transformers",
+    "accelerate",
+    "fastapi",
+    "uvicorn",
+    "soundfile",
+    "gguf>=0.10.0",
+    "mlx",
+    "mlx-whisper",
+    "openai>=1.0.0"
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["lab/astromech_test", "lab/gemma_server.py"]
+py-modules = ["rocky.py", "stt_server.py"]
