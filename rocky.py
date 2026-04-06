@@ -20,7 +20,7 @@ from synthesizer.rocky import speak_rocky, pre_warm_cache
 
 # ==================== Configuration ====================
 API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_ID = "gemini-2.5-flash-lite"  # Latest and fastest
+MODEL_ID = "gemini-2.5-flash-lite"
 TEMP_AUDIO_PATH = "/tmp/rocky_input.wav"
 FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 

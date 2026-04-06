@@ -11,7 +11,7 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
 - **Lore-Accurate Eridanian Synthesis**: Generates polyphonic chords in real-time. Specific words map to emotional chords (e.g., "amaze" is a bright E Major), while unknown words are mathematically hashed to permanent, unique 3-frequency signatures.
 - **Dual-Brain Architecture**: 
   - **Voice Box (Pi Zero 2W)**: Handles recording, hardware LEDs, LCD display, and Eridanian voice synthesis.
-  - **Brain (Mac Hub)**: Uses Apple Silicon-optimized `mlx-whisper` for fast STT and **LM Studio** for local LLM inference (Gemma 4).
+  - **Brain (Mac Hub)**: Uses Apple Silicon-optimized `mlx-whisper` (specifically the `Whisper-Tiny` model) for near-instant STT and **LM Studio** for local LLM inference (Gemma 4).
 - **Interactive Visuals**: Custom LCD boot screen (`rocky_boot_screen.png`) and a dynamic "thinking bubble" animation that appears while Rocky is processing.
 - **Hardware Integration**: Full support for the [**PiSugar Whisplay HAT**](https://github.com/PiSugar/Whisplay) (LCD, Button, RGB LED, and WM8960 Audio).
 
@@ -21,15 +21,15 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
 
 To achieve low-latency AI interactions on a Raspberry Pi Zero 2W, we split the workload:
 1.  **The Pi** records audio and `POST`s the raw bytes to the Mac Hub.
-2.  **The Mac Hub** intercepts the audio, transcribes it instantly using `mlx-whisper` (bypassing ffmpeg for speed), and pings **LM Studio**.
+2.  **The Mac Hub** intercepts the audio, transcribes it instantly using `mlx-whisper` (`Whisper-Tiny`) and pings **LM Studio**.
 3.  **LM Studio** generates the Rocky-persona response.
 4.  **The Pi** receives the text, renders the response on the LCD, and synthesizes the Eridanian chords.
 
 ---
 
-## 📈 Benchmarking (Local vs Cloud)
+## 📈 Benchmarking (Local M2 Mac 8GB vs Cloud)
 
-| Interaction Phase | Local (M2 Mac + STT Proxy) | Cloud (Gemini API) |
+| Interaction Phase | Local (STT `Whisper-Tiny` + `gemma-4-e2b`) | Cloud (Gemini API `gemini-2.5-flash-lite`) |
 | :--- | :--- | :--- |
 | Handshake & Transcribe | ~0.8s | ~1.2s |
 | LLM Reasoning & Response | ~1.2s | ~0.8s |
