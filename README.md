@@ -6,7 +6,7 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
 
 ---
 
-## Full build Video: https://www.youtube.com/watch?v=NfxFY1LUYDo
+## Full build Video: ![https://www.youtube.com/watch?v=NfxFY1LUYDo](thumbnail.png)
 
 ---
 
