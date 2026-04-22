@@ -6,6 +6,10 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
 
 ---
 
+## Full build Video: https://www.youtube.com/watch?v=NfxFY1LUYDo
+
+---
+
 ## ✨ Core Features
 
 - **Lore-Accurate Eridanian Synthesis**: Generates polyphonic chords in real-time. Specific words map to emotional chords (e.g., "amaze" is a bright E Major), while unknown words are mathematically hashed to permanent, unique 3-frequency signatures.
