@@ -1,4 +1,4 @@
-# 🎸 Rocky: Your Own Personal Eridanian Buddy
+# Rocky: Your Own Personal Eridanian Buddy ![Rocky](rocky_wave.png)
 
 Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. He communicates natively in musical chords.
 
