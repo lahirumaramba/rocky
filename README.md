@@ -1,6 +1,6 @@
 # 🎸 Rocky: Your Own Personal Eridanian Buddy
 
-Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. He communicates natively in musical chords, which humans perceive as tones similar to a pipe organ or multiple flutes. 
+Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. He communicates natively in musical chords.
 
 This project implements a **Dual-Device "Voice Box & Brain" Architecture** to bring Rocky to life on a Raspberry Pi Zero 2W with near-instant responsiveness.
 
@@ -54,7 +54,7 @@ SDL_AUDIODRIVER=alsa python3 rocky.py
 # Install build headers
 sudo apt-get install libsdl2-2.0-0 libsdl2-mixer-2.0-0 python3-dev libgpiod-dev liblgpio-dev swig
 uv sync
-uv run rocky
+uv run rocky.py
 ```
 
 ---
@@ -65,7 +65,7 @@ uv run rocky
 2.  **Run STT Proxy**:
     ```bash
     uv sync --extra mac-server
-    uv run stt-server
+    uv run stt_server.py
     ```
 
 ---
