@@ -4,11 +4,11 @@ Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. 
 
 This project implements a **Dual-Device "Voice Box & Brain" Architecture** to bring Rocky to life on a Raspberry Pi Zero 2W with near-instant responsiveness.
 
----
+## Full build Video on YouTube:
 
-## Full build Video: [![Full Build Video on YouTube](thumbnail.png)](https://www.youtube.com/watch?v=NfxFY1LUYDo)
-
----
+<a href="https://www.youtube.com/watch?v=NfxFY1LUYDo" target="_blank">
+  <img src="thumbnail.png" alt="Full Build Video on YouTube" width="500">
+</a>
 
 ## ✨ Core Features
 
@@ -19,8 +19,6 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
 - **Interactive Visuals**: Custom LCD boot screen (`rocky_boot_screen.png`) and a dynamic "thinking bubble" animation that appears while Rocky is processing.
 - **Hardware Integration**: Full support for the [**PiSugar Whisplay HAT**](https://github.com/PiSugar/Whisplay) (LCD, Button, RGB LED, and WM8960 Audio).
 
----
-
 ## 🧠 Architecture Overview
 
 To achieve low-latency AI interactions on a Raspberry Pi Zero 2W, we split the workload:
@@ -28,8 +26,6 @@ To achieve low-latency AI interactions on a Raspberry Pi Zero 2W, we split the w
 2.  **The Mac Hub** intercepts the audio, transcribes it instantly using `mlx-whisper` (`Whisper-Tiny`) and pings **LM Studio**.
 3.  **LM Studio** generates the Rocky-persona response.
 4.  **The Pi** receives the text, renders the response on the LCD, and synthesizes the Eridanian chords.
-
----
 
 ## 📈 Benchmarking (Local M2 Mac 8GB vs Cloud)
 
@@ -40,8 +36,6 @@ To achieve low-latency AI interactions on a Raspberry Pi Zero 2W, we split the w
 | **Total Latency** | **~2.0s** | **~2.0s** |
 
 *Note: The Local setup matches Cloud speeds while running entirely offline/privately on your local network.*
-
----
 
 ## 🥧 Raspberry Pi Setup (The Voice Box)
 
@@ -61,8 +55,6 @@ uv sync
 uv run rocky.py
 ```
 
----
-
 ## 🖥️ Mac Hub Setup (The Brain)
 
 1.  **Start LM Studio**: Load a 4-bit quantized model (e.g., `Gemma 4-e2b-it-GGUF`) and start the **Local Server** on port `1234`.
@@ -71,8 +63,6 @@ uv run rocky.py
     uv sync --extra mac-server
     uv run stt_server.py
     ```
-
----
 
 ## ⚙️ Configuration (.env)
 
@@ -83,13 +73,9 @@ uv run rocky.py
 | `LM_STUDIO_URL` | The endpoint for your local LM Studio instance. | `http://localhost:1234/v1` |
 | `SHOW_BOOT_SCREEN` | Show Rocky's splash screen on startup. | `True` |
 
----
-
 ## 🔬 Experimental Lab
 - **Astromech Test**: R2-D2 style sound generator (`uv run r2d2`).
 - **Gemma Native**: The original 10GB unquantized inference server (`uv run rocky-server`).
-
----
 
 ## 📜 License
 MIT License. Feel free to build your own Eridanian friend!
