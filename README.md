@@ -87,7 +87,8 @@ uv run rocky.py
 | `LM_STUDIO_URL` | The endpoint for your local LM Studio instance. | `http://localhost:1234/v1` |
 | `SHOW_BOOT_SCREEN` | Show Rocky's splash screen on startup. | `True` |
 | `USE_PIPER` | Enable Piper TTS for verbal speech. | `False` |
-| `PIPER_QUALITY` | Select Piper voice model (`low`, `medium`, `rocky`). | `rocky` |
+| `PIPER_MODEL` | Piper voice model file (e.g. `en_US-lessac-low.onnx`). | `en_US-lessac-low.onnx` |
+| `PIPER_RATE` | Sample rate matching the Piper model. | `16000` |
 | `DEMO_MODE` | Bypass LLM and use pre-defined responses. | `False` |
 | `DEMO_FILE` | Path to text file for sequential demo phrases. | `demo_phrases.txt` |
 
