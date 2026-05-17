@@ -36,15 +36,14 @@ DEMO_FILE = os.getenv("DEMO_FILE", "demo_phrases.txt")
 
 # Piper TTS Config
 USE_PIPER = os.getenv("USE_PIPER", "False").lower() in ["true", "1", "yes"]
-PIPER_QUALITY = os.getenv("PIPER_QUALITY", "rocky")
+PIPER_MODEL = os.getenv("PIPER_MODEL", "en_US-lessac-low.onnx")
+PIPER_RATE = os.getenv("PIPER_RATE", "16000")
 PIPER_DIR = os.path.expanduser("~/piper")
 PIPER_PATH = os.path.join(PIPER_DIR, "piper/piper")
 
-VOICES = {
-    "low": {"model": "en_US-lessac-low.onnx", "rate": "16000"},
-    "medium": {"model": "en_US-joe-medium.onnx", "rate": "22050"},
-    "rocky": {"model": "rocky_model_2999.onnx", "rate": "16000"}
-}
+# Alternate Piper voices (examples for .env):
+# PIPER_MODEL=rocky_model_2999.onnx  | PIPER_RATE=16000
+# PIPER_MODEL=en_US-joe-medium.onnx  | PIPER_RATE=22050
 
 # Load the system prompt
 try:
@@ -200,12 +199,11 @@ def load_image_rgb565(filepath, screen_width=240, screen_height=280):
 # ==================== Piper TTS Engine ====================
 
 class PiperTTS:
-    def __init__(self, quality):
-        voice = VOICES.get(quality, VOICES["low"])
-        self.model_path = os.path.join(PIPER_DIR, voice["model"])
-        self.sample_rate = voice["rate"]
+    def __init__(self, model_name, sample_rate):
+        self.model_path = os.path.join(PIPER_DIR, model_name)
+        self.sample_rate = sample_rate
         
-        print(f"Piper: Initializing {quality} quality engine...")
+        print(f"Piper: Initializing {model_name} TTS engine...")
         
         # Start Piper process
         self.piper_proc = subprocess.Popen(
@@ -289,7 +287,7 @@ class RockyApp:
         self.tts = None
         if USE_PIPER:
             try:
-                self.tts = PiperTTS(PIPER_QUALITY)
+                self.tts = PiperTTS(PIPER_MODEL, PIPER_RATE)
             except Exception as e:
                 print(f"Failed to initialize Piper TTS: {e}")
             

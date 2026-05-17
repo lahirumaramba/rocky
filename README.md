@@ -1,13 +1,23 @@
 # ![Rocky](rocky_wave.png) Rocky: Your Own Personal Eridanian Buddy
 
-Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. He communicates natively in musical chords.
+Here is your own alien rock friend inspired by Andy Weir's *Project Hail Mary*. He communicates in musical chords.
 
 This project implements a **Dual-Device "Voice Box & Brain" Architecture** to bring Rocky to life on a Raspberry Pi Zero 2W with near-instant responsiveness.
 
-## Full build Video on YouTube:
+> [!NOTE]
+> **Update (May 17, 2026): Piper TTS Integration!**
+> Rocky can now speak with a human voice in parallel with his Eridanian musical chords! This upgrade is completely opt-in, fully configurable via your `.env` file, and allows you to load custom `.onnx` voice models. Check out the new demo video below!
 
+## Demo Videos:
+
+**Full Build Video:**<br>
 <a href="https://www.youtube.com/watch?v=NfxFY1LUYDo" target="_blank">
   <img src="thumbnail.png" alt="Full Build Video on YouTube" width="600">
+</a>
+
+**Piper TTS Feature Demo:**<br>
+<a href="https://youtu.be/tMpZ1kpeqoA" target="_blank">
+  <img src="thumbnail_tts.png" alt="Piper TTS Demo on YouTube" width="600">
 </a>
 
 ---
@@ -19,7 +29,7 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
   - **Voice Box (Pi Zero 2W)**: Handles recording, hardware LEDs, LCD display, and Eridanian voice synthesis.
   - **Brain (Mac Hub)**: Uses Apple Silicon-optimized `mlx-whisper` (specifically the `Whisper-Tiny` model) for near-instant STT and **LM Studio** for local LLM inference (Gemma 4).
 - **Interactive Visuals**: Custom LCD boot screen (`rocky_boot_screen.png`) and a dynamic "thinking bubble" animation that appears while Rocky is processing.
-- **Piper TTS Integration (Opt-in)**: High-quality verbal speech synthesis running in parallel with musical chords. By default, Rocky only speaks in his native Eridanian musical chords, but human TTS can be enabled via `.env`. Supports custom fine-tuned models.
+- **Piper TTS Integration (Opt-in)**: High-quality verbal speech synthesis running in parallel with musical chords. By default, Rocky only speaks in his Eridanian musical chords, but human TTS can be enabled via `.env`. Supports custom fine-tuned models.
 - **Sequential Demo Mode**: Advanced demo mode that cycles through a list of phrases from a text file, perfect for presentations or testing without a network connection.
 - **Hardware Integration**: Full support for the [**PiSugar Whisplay HAT**](https://github.com/PiSugar/Whisplay) (LCD, Button, RGB LED, and WM8960 Audio).
 
@@ -88,7 +98,7 @@ uv run rocky.py
   python lab/show_and_speak.py rocky 2607
   ```
 - **Astromech Test**: R2-D2 style sound generator (`uv run r2d2`).
-- **Gemma Native**: The original 10GB unquantized inference server (`uv run rocky-server`).
+- **Gemma Model**: The original 10GB unquantized inference server (`uv run rocky-server`).
 
 ## 📜 License
 MIT License. Feel free to build your own Eridanian friend!
