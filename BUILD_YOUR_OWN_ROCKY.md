@@ -213,6 +213,10 @@ wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/joe/mediu
 wget https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/joe/medium/en_US-joe-medium.onnx.json
 ```
 
+> [!TIP]
+> **Train Your Own Custom Piper Voice Model!**
+> If you'd like to train your own custom voice (such as your own voice clone or a custom Rocky voice) to run completely offline on the Pi, check out the [🎙️ Qwen-TTS Cloner](https://github.com/lahirumaramba/qwen-tts-cloner) pipeline. It provides a Google Colab workflow to generate voice datasets and fine-tune lightweight, high-fidelity Piper TTS models!
+
 ### 4. Configure `.env` for Piper
 Now, update your Rocky `.env` file to activate Piper TTS.
 1. Open the project configuration file:
