@@ -6,7 +6,7 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
 
 > [!IMPORTANT]
 > **Looking to build your own Rocky?**
-> Check out our comprehensive, beginner-friendly [**Step-by-Step Installation Guide (BUILD_YOUR_OWN_ROCKY.md)**](BUILD_YOUR_OWN_ROCKY.md)! It covers setting up a fresh Raspberry Pi Zero 2W, installing the PiSugar Whisplay HAT and audio drivers, setting up the Fast Python manager `uv`, configuring Google Gemini vs Local LM Studio, and running custom offline Piper TTS voice models.
+> Check out the [**Step-by-Step Installation Guide (BUILD_YOUR_OWN_ROCKY.md)**](BUILD_YOUR_OWN_ROCKY.md)! It covers setting up a fresh Raspberry Pi Zero 2W, installing the PiSugar Whisplay HAT and audio drivers, setting up `uv`, configuring Google Gemini vs Local LM Studio, and running offline Piper TTS voice models.
 
 > [!NOTE]
 > **Update (May 17, 2026): Piper TTS Integration!**
@@ -58,7 +58,7 @@ To achieve low-latency AI interactions on a Raspberry Pi Zero 2W, we split the w
 ## 🥧 Raspberry Pi Setup (The Voice Box)
 
 > [!TIP]
-> For a detailed, comprehensive walkthrough starting from scratch (a clean MicroSD card) to a fully assembled and configured voice box, read our [**Step-by-Step Hardware & Software Setup Guide (BUILD_YOUR_OWN_ROCKY.md)**](BUILD_YOUR_OWN_ROCKY.md).
+> For a detailed, comprehensive walkthrough, read the [**Step-by-Step Hardware & Software Setup Guide (BUILD_YOUR_OWN_ROCKY.md)**](BUILD_YOUR_OWN_ROCKY.md).
 
 ### Option A: The "It Just Works" Way (System Python)
 Skip virtual environments and use pre-compiled hardware drivers:
