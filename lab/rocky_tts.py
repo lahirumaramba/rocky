@@ -35,7 +35,7 @@ DEMO_RESPONSE = os.getenv("DEMO_RESPONSE", "Amaze! This is a demo response from 
 DEMO_FILE = os.getenv("DEMO_FILE", "demo_phrases.txt")
 
 # Piper TTS Config
-USE_PIPER = os.getenv("USE_PIPER", "False").lower() in ["true", "1", "yes"]
+USE_PIPER = os.getenv("USE_PIPER", "True").lower() in ["true", "1", "yes"]
 PIPER_QUALITY = os.getenv("PIPER_QUALITY", "rocky")
 PIPER_DIR = os.path.expanduser("~/piper")
 PIPER_PATH = os.path.join(PIPER_DIR, "piper/piper")

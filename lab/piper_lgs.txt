@@ -1,0 +1,86 @@
+lahirumaramba@rocky-pi:~/rocky $ python lab/show_and_speak.py
+Initializing display...
+Detected hardware: Raspberry Pi Zero 2 W Rev 1.0, Backlight mode: PWM
+wm8960 sound card detected.
+Initializing TTS quality: medium...
+
+Type your message and hit Enter.
+Press Ctrl+C to exit.
+
+Say: hello
+LCD: hello
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:09:01.449] [piper] [info] Loaded voice in 4.906184153 second(s) | Latency to start: 0.195s
+⏱️ [TTS Benchmark] [2026-04-26 16:09:02.218] [piper] [info] Real-time factor: 1.3601297058136637 (infer=0.742180527 sec, audio=0.5456689342403628 sec)
+hello
+LCD: hello
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:09:06.337] [piper] [info] Real-time factor: 1.3479555955078126 (infer=1.5336739220000002 sec, audio=1.1377777777777778 sec) | Latency to start: 0.799s
+this is the medium model
+LCD: this is the medium model
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:09:19.068] [piper] [info] Real-time factor: 1.3705258598288954 (infer=3.389207895 sec, audio=2.4729251700680273 sec) | Latency to start: 1.873s
+this is the medium model
+LCD: this is the medium model
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:09:33.581] [piper] [info] Real-time factor: 1.357216666398903 (infer=5.026564256 sec, audio=3.7035827664399092 sec) | Latency to start: 1.654s
+Hello
+LCD: Hello
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:10:39.545] [piper] [info] Real-time factor: 1.3473646539137416 (infer=5.709648674 sec, audio=4.237641723356009 sec) | Latency to start: 0.691s
+Hello
+LCD: Hello
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:10:43.429] [piper] [info] Real-time factor: 1.3417438071319219 (infer=6.558175989 sec, audio=4.887800453514739 sec) | Latency to start: 0.855s
+This is the medium model
+LCD: This is the medium model
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:10:50.769] [piper] [info] Real-time factor: 1.347666962064647 (infer=8.198704624000001 sec, audio=6.0836281179138325 sec) | Latency to start: 1.650s
+Amaze Amaze Amaze!!
+LCD: Amaze Amaze Amaze!!
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:01.673] [piper] [info] Real-time factor: 1.337570185416252 (infer=9.75231218 sec, audio=7.291065759637188 sec) | Latency to start: 1.562s
+It's time go!!
+LCD: It's time go!!
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:10.541] [piper] [info] Real-time factor: 1.3413728291139242 (infer=11.07262208 sec, audio=8.25469387755102 sec) | Latency to start: 1.329s
+^C
+Shutting down...
+lahirumaramba@rocky-pi:~/rocky $ python lab/show_and_speak.py low
+Initializing display...
+Detected hardware: Raspberry Pi Zero 2 W Rev 1.0, Backlight mode: PWM
+wm8960 sound card detected.
+Initializing TTS quality: low...
+
+Type your message and hit Enter.
+Press Ctrl+C to exit.
+
+Say: Hellow
+LCD: Hellow
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:26.347] [piper] [info] Loaded voice in 5.230373537 second(s) | Latency to start: 1.090s
+H⏱️ [TTS Benchmark] [2026-04-26 16:11:27.197] [piper] [info] Real-time factor: 1.004324565625 (infer=0.642767722 sec, audio=0.64 sec)
+ellow
+LCD: Hellow
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:29.807] [piper] [info] Real-time factor: 1.03230333989726 (infer=1.205730301 sec, audio=1.1680000000000001 sec) | Latency to start: 0.570s
+Hello
+LCD: Hello
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:34.020] [piper] [info] Real-time factor: 1.039520586363636 (infer=1.8295562319999998 sec, audio=1.7600000000000002 sec) | Latency to start: 0.627s
+Hello
+LCD: Hello
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:37.828] [piper] [info] Real-time factor: 1.039218707003546 (infer=2.344477403 sec, audio=2.2560000000000002 sec) | Latency to start: 0.519s
+This is the low model
+LCD: This is the low model
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:43.820] [piper] [info] Real-time factor: 1.029014226635514 (infer=3.523344712 sec, audio=3.4240000000000004 sec) | Latency to start: 1.183s
+Amaze Amaze Amaze!!!
+LCD: Amaze Amaze Amaze!!!
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:11:56.933] [piper] [info] Real-time factor: 1.0145073191445182 (infer=4.885867249 sec, audio=4.816000000000001 sec) | Latency to start: 1.370s
+It is time go!
+LCD: It is time go!
+
+Say: ⏱️ [TTS Benchmark] [2026-04-26 16:12:03.021] [piper] [info] Real-time factor: 1.0080602463037633 (infer=5.999974586 sec, audio=5.952000000000001 sec) | Latency to start: 1.127s

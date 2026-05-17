@@ -19,6 +19,8 @@ This project implements a **Dual-Device "Voice Box & Brain" Architecture** to br
   - **Voice Box (Pi Zero 2W)**: Handles recording, hardware LEDs, LCD display, and Eridanian voice synthesis.
   - **Brain (Mac Hub)**: Uses Apple Silicon-optimized `mlx-whisper` (specifically the `Whisper-Tiny` model) for near-instant STT and **LM Studio** for local LLM inference (Gemma 4).
 - **Interactive Visuals**: Custom LCD boot screen (`rocky_boot_screen.png`) and a dynamic "thinking bubble" animation that appears while Rocky is processing.
+- **Piper TTS Integration (Opt-in)**: High-quality verbal speech synthesis running in parallel with musical chords. By default, Rocky only speaks in his native Eridanian musical chords, but human TTS can be enabled via `.env`. Supports custom fine-tuned models.
+- **Sequential Demo Mode**: Advanced demo mode that cycles through a list of phrases from a text file, perfect for presentations or testing without a network connection.
 - **Hardware Integration**: Full support for the [**PiSugar Whisplay HAT**](https://github.com/PiSugar/Whisplay) (LCD, Button, RGB LED, and WM8960 Audio).
 
 ## 🧠 Architecture Overview
@@ -74,8 +76,17 @@ uv run rocky.py
 | `USE_LOCAL_LLM` | Set to `True` to use the Mac STT Server. | `False` |
 | `LM_STUDIO_URL` | The endpoint for your local LM Studio instance. | `http://localhost:1234/v1` |
 | `SHOW_BOOT_SCREEN` | Show Rocky's splash screen on startup. | `True` |
+| `USE_PIPER` | Enable Piper TTS for verbal speech. | `False` |
+| `PIPER_QUALITY` | Select Piper voice model (`low`, `medium`, `rocky`). | `rocky` |
+| `DEMO_MODE` | Bypass LLM and use pre-defined responses. | `False` |
+| `DEMO_FILE` | Path to text file for sequential demo phrases. | `demo_phrases.txt` |
 
 ## 🔬 Experimental Lab
+- **Show & Speak**: Test TTS and LCD visuals. Supports loading specific model epochs:
+  ```bash
+  # Load 'rocky' voice with specific epoch checkpoint (e.g. 2607)
+  python lab/show_and_speak.py rocky 2607
+  ```
 - **Astromech Test**: R2-D2 style sound generator (`uv run r2d2`).
 - **Gemma Native**: The original 10GB unquantized inference server (`uv run rocky-server`).
 
