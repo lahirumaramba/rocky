@@ -129,7 +129,7 @@ This processes audio locally on your computer using `mlx-whisper` (`Whisper-Tiny
   ```
 - Install dependencies with the local server extras:
   ```bash
-  uv sync --extra mac-server
+  uv sync --extra mac-server --python 3.13
   ```
 - Open **LM Studio**:
   1. Load a 4-bit quantized Gemma model (e.g. [`gemma-4-e2b-it.Q4_K_M.gguf`](https://huggingface.co/lmstudio-community/gemma-4-E2B-it-GGUF)).
